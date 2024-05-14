@@ -70,16 +70,26 @@ void spacing(void) {
 
 int get_train_length(void) {
 	int t_length;
-	printf("train length(15~50)>> ");
-	scanf_s("%d", &t_length);
-	return t_length;
+	while (1) {
+		printf("train length(15~50)>> ");
+		scanf_s("%d", &t_length);
+		if ((LEN_MIN <= t_length && t_length <= LEN_MAX)) {
+			return t_length;
+			break;
+		}
+	}
 }
 
 int get_probability(void){
 	int p;
-	printf("percentile probability 'p' (10~90)>> ");
-	scanf_s("%d", &p);
-	return p;
+	while (1) {
+		printf("percentile probability 'p' (10~90)>> ");
+		scanf_s("%d", &p);
+		if (PROB_MIN <= p && p <= PROB_MAX) {
+			return p;
+			break;
+		}
+	}
 }
 
 
@@ -124,7 +134,7 @@ int main() {
 //		//열차 길이와 확률 p(%) 입력받기 잘못된 입력 -> 프로그램 종료
 //		//int citizen, zombie, madongsuk;
 //
-//		if ((LEN_MIN <= t_length && t_length <= LEN_MAX) && (PROB_MIN <= p && p <= PROB_MAX))
+//		if ( && ())
 //		{
 //			//열차 초기 상태 출력
 //			citizen = t_length - 6;
