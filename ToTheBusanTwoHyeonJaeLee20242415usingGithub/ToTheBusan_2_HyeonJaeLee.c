@@ -37,11 +37,17 @@
 #define ACTION_PROVOKE 1
 #define ACTION_PULL 2
 
-// (입력,리턴 없는함수) 인트로 출력하는 함수
+// 인트로 출력하는 함수
 void intro(void);
 void spacing(void);
-int get_train_length(void);
-int get_probability(void);
+void get_train_length(void);
+void get_probability(void);
+void basic_length_setting(void);
+void first_train_state(void);
+
+int t_length, p;
+int citizen, zombie, madongsuk;
+
 
 void intro(void) {
 	printf("==================================================\n");
@@ -64,55 +70,82 @@ void intro(void) {
 	printf("====마동석에 빙의해서 좀비로부터 시민을 지켜라====\n");
 	printf("====   내 아트박스 사장인데 니가 스포했니?    ====\n");
 }
+//줄 바꾸기
 void spacing(void) {
 	printf("\n");
 }
-
-int get_train_length(void) {
-	int t_length;
+// 올바른 길이 값 받기
+void get_train_length(void) {
 	while (1) {
 		printf("train length(15~50)>> ");
 		scanf_s("%d", &t_length);
 		if ((LEN_MIN <= t_length && t_length <= LEN_MAX)) {
-			return t_length;
 			break;
 		}
 	}
 }
-
-int get_probability(void){
-	int p;
+// 올바른 확률 값 받기
+void get_probability(void){
 	while (1) {
 		printf("percentile probability 'p' (10~90)>> ");
 		scanf_s("%d", &p);
 		if (PROB_MIN <= p && p <= PROB_MAX) {
-			return p;
 			break;
 		}
 	}
 }
+// t_length 에 따라 #출력하는 함수(반환값X)
+void basic_length_setting(void) {
+	for (int i = 0; i < t_length; i++) {
+		printf("#");
+	}
+	printf("\n");
+}
 
+// 초기 열차 상태 출력 함수
+void first_train_state(void) {
+    citizen = t_length - 6;
+	zombie = t_length - 3;
+    madongsuk = t_length - 2;
+	for (int i = 0; i < t_length; i++) {
 
+		if (i == 0 || i == t_length - 1) {
+			printf("#");
+		}
+		else if (i == citizen) {
+			printf("C");
+		}
+		else if (i == zombie) {
+			printf("Z");
+		}
+		else if (i == madongsuk) {
+			printf("M");
+		}
+		else {
+			printf(" ");
+		}
+
+	}
+	printf("\n");
+}
+// main 실행 함수
 int main() {
 	intro();
+
+	get_train_length();
+	get_probability();
+
 	spacing();
-	int t_length = get_train_length();
-	printf("%d", t_length);
+	
+	basic_length_setting();
+	first_train_state();
+	basic_length_setting();
+
 	spacing();
-	int p = get_probability();
-	printf("%d", p);
-	spacing();
+
 	return 0;
 }
 
-// (입력,리턴 없는함수) 엔터키 입력으로 띄어쓰기 디자인하는 함수
-// (입력 없는 함수)열차의 길이를 입력하는 함수
-// (입력 없는 함수)확률을 입력하는 함수
-// ---확률과 열차 길이 입력---
-// 범위 밖의 값 입력시 유효한 값 입력 될 때까지 다시 입력하는 함수
-// 유효값 입력 안내와 다시 입력 유도
-// ---열차 초기상태 출력----
-// 열차 초기 상태 출력 함수
 // ----시민, 좀비 이동---
 // 시민 이동 정의하는 함수
 // 좀비 이동 정의하는 함수
@@ -131,52 +164,6 @@ int main() {
 //	srand((unsigned int)time(NULL));
 // 
 //	{
-//		//열차 길이와 확률 p(%) 입력받기 잘못된 입력 -> 프로그램 종료
-//		//int citizen, zombie, madongsuk;
-//
-//		if ( && ())
-//		{
-//			//열차 초기 상태 출력
-//			citizen = t_length - 6;
-//			zombie = t_length - 3;
-//			madongsuk = t_length - 2;
-//
-//			printf("\n");
-//
-//			for (int i = 0; i < t_length; i++) {
-//				printf("#");
-//			}
-//
-//			printf("\n");
-//
-//			for (int i = 0; i < t_length; i++) {
-//
-//				if (i == 0 || i == t_length - 1) {
-//					printf("#");
-//				}
-//
-//				else if (i == citizen) {
-//					printf("C");
-//				}
-//				else if (i == zombie) {
-//					printf("Z");
-//				}
-//				else if (i == madongsuk) {
-//					printf("M");
-//				}
-//				else {
-//					printf(" ");
-//				}
-//
-//			}
-//
-//			printf("\n");
-//
-//			for (int i = 0; i < t_length; i++) {
-//				printf("#");
-//			}
-//
-//			printf("\n");
 //
 //			int after_citizen = citizen;
 //			int after_zombie = zombie;
