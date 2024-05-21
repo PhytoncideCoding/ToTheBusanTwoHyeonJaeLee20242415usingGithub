@@ -9,18 +9,19 @@
 //모든 입력에 대해 유효 값 입력 될 때 까지 다시 입력 받기
 //반드시 정수 1개만 입력된다고 가정
 //배열 전역변수로 선언
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-
+#include <Windows.h>
 //파라미터
-#define LEN_MIN 15
+#define LEN_MIN 15 // 기차 길이
 #define LEN_MAX 50
-#define STM_MIN 0
+#define STM_MIN 0 // 마동석 체력
 #define STM_MAX 5
-#define PROB_MIN 10
+#define PROB_MIN 10 // 확률
 #define PROB_MAX 90
-#define AGGRO_MIN 0
+#define AGGRO_MIN 0 // 어그로 범위 
 #define AGGRO_MAX 5
 
 // 마동석 이동방향
@@ -37,18 +38,32 @@
 #define ACTION_PROVOKE 1
 #define ACTION_PULL 2
 
-// 인트로 출력하는 함수
 void intro(void);
-void spacing(void);
-void get_train_length(void);
-void get_probability(void);
-void basic_length_setting(void);
-void first_train_state(void);
+int get_train_length(void);
+int get_probability(void);
+int get_random_number(void);
 
-int t_length, p;
-int citizen, zombie, madongsuk;
+void first_train_state(int, int, int, int);
 
+int calc_citizen_moving(int, int, int);
+int calc_zombie_moving(int, int, int, int);
 
+void after_train_state(int, int, int, int);
+
+void print_citizen_state(int, int);
+void print_zombie_state(int, int, int);
+
+void victory_citizen(int);
+void victory_zombie(int, int);
+
+int t_length;
+int p, r;
+int first_citizen, first_zombie, first_madongsuk;
+int turn;
+int before_citizen, before_zombie, before_madongsuk;
+int after_citizen, after_zombie, after_madongsuk;
+
+// 인트로 함수
 void intro(void) {
 	printf("==================================================\n");
 	printf("[                 ^                              ]\n");
@@ -70,12 +85,9 @@ void intro(void) {
 	printf("====마동석에 빙의해서 좀비로부터 시민을 지켜라====\n");
 	printf("====   내 아트박스 사장인데 니가 스포했니?    ====\n");
 }
-//줄 바꾸기
-void spacing(void) {
-	printf("\n");
-}
 // 올바른 길이 값 받기
-void get_train_length(void) {
+int get_train_length(void) {
+	int t_length;
 	while (1) {
 		printf("train length(15~50)>> ");
 		scanf_s("%d", &t_length);
@@ -83,42 +95,104 @@ void get_train_length(void) {
 			break;
 		}
 	}
+	return t_length;
 }
 // 올바른 확률 값 받기
-void get_probability(void){
+int get_probability(void){
 	while (1) {
 		printf("percentile probability 'p' (10~90)>> ");
 		scanf_s("%d", &p);
 		if (PROB_MIN <= p && p <= PROB_MAX) {
+			return p;
 			break;
 		}
 	}
 }
-// t_length 에 따라 #출력하는 함수(반환값X)
-void basic_length_setting(void) {
+// 초기 열차 상태 출력 함수
+void first_train_state(int t_length, int first_citizen, int first_zombie, int first_madongsuk) {
+
 	for (int i = 0; i < t_length; i++) {
 		printf("#");
 	}
+	
 	printf("\n");
-}
 
-// 초기 열차 상태 출력 함수
-void first_train_state(void) {
-    citizen = t_length - 6;
-	zombie = t_length - 3;
-    madongsuk = t_length - 2;
 	for (int i = 0; i < t_length; i++) {
 
 		if (i == 0 || i == t_length - 1) {
 			printf("#");
 		}
-		else if (i == citizen) {
+		else if (i == first_citizen) {
 			printf("C");
 		}
-		else if (i == zombie) {
+		else if (i == first_zombie) {
 			printf("Z");
 		}
-		else if (i == madongsuk) {
+		else if (i == first_madongsuk) {
+			printf("M");
+		}
+		else {
+			printf(" ");
+		}
+
+	}
+
+	printf("\n");
+	
+	for (int i = 0; i < t_length; i++) {
+		printf("#");
+	}
+
+	printf("\n");
+}
+// 랜덤 수 리턴 함수 
+int get_random_number(void) {
+	srand((unsigned int)time(NULL));
+	r = rand() % 100;
+	return r;
+}
+// 시민 이동 계산 함수
+int calc_citizen_moving(int r, int p, int after_citizen) {
+	if (r >= p) {
+		after_citizen = after_citizen - 1;
+		
+	}
+	else if (r < p) {
+		after_citizen = after_citizen;
+	}
+	return after_citizen;
+}
+// 좀비 이동 계산 함수 
+int calc_zombie_moving(int turn, int r, int p, int after_zombie) {
+	if (turn % 2 == 1 && r < p) {
+		after_zombie = after_zombie - 1;
+	}
+	else if (turn % 2 == 1 && r >= p) {
+		after_zombie = after_zombie;
+	}
+	else {
+		after_zombie = after_zombie;
+	}
+	return after_zombie;
+}
+
+void after_train_state(int t_length, int after_citizen, int after_zombie, int first_madongsuk) {
+	for (int i = 0; i < t_length; i++) {
+		printf("#");
+	}
+	printf("\n");
+	for (int i = 0; i < t_length; i++) {
+
+		if (i == 0 || i == t_length - 1) {
+			printf("#");
+		}
+		else if (i == after_citizen) {
+			printf("C");
+		}
+		else if (i == after_zombie) {
+			printf("Z");
+		}
+		else if (i == first_madongsuk) {
 			printf("M");
 		}
 		else {
@@ -127,156 +201,98 @@ void first_train_state(void) {
 
 	}
 	printf("\n");
+	for (int i = 0; i < t_length; i++) {
+		printf("#");
+	}
+	printf("\n");	
 }
-// main 실행 함수
-int main() {
-	intro();
+//시민 상태 출력
+void print_citizen_state(int before_citizen, int after_citizen) {
+	if (before_citizen == after_citizen) {
+		printf("citizen: stay %d\n", before_citizen);
+	}
+	else {
+		printf("citizen: %d -> %d\n", before_citizen, after_citizen);
+	}
+}
+//좀비 상태 출력
+void print_zombie_state(int turn, int before_zombie, int after_zombie) {
+	if (turn % 2 == 1 && before_zombie == after_zombie) {
+		printf("zombie: stay %d\n", before_zombie);
+	}
+	else if (turn % 2 == 1 && before_zombie == after_zombie + 1) {
+		printf("zombie: %d -> %d\n", before_zombie, after_zombie);
+	}
+	else {
+		printf("zombie: stay %d (cannot move)\n", before_zombie);
+	}
+}
 
-	get_train_length();
-	get_probability();
-
-	spacing();
+//시민 승리 출력
+void victory_citizen(int after_citizen) {
+	if (after_citizen == 1) {
+		printf("\n");
+		printf("SUCCESS!\n");
+		printf("citizen(s) escaped to the next train");
+	}
+}
+//좀비 승리 출력
+void victory_zombie(int after_citizen, int after_zombie) {
+	if (after_citizen + 1 == after_zombie) {
+		printf("\n");
+		printf("GAME OVER!\n");
+		printf("Citizen(s) has(have) ben attacked by a zombie");
+	}
 	
-	basic_length_setting();
-	first_train_state();
-	basic_length_setting();
+}
+// main 함수
+int main() {
+	// 인트로
+	intro();
+	// 길이 , 확률 입력
+	t_length = get_train_length();//ok
+	p = get_probability();
+	//열차의 길이15이면 시민 초기 위치9 
+	// 시민, 좀비, 마동석 초기 위치
+	first_citizen = t_length - 6;
+	first_zombie = t_length - 3;
+	first_madongsuk = t_length - 2;
 
-	spacing();
+	// 열차 초기 상태 출력
+	first_train_state(t_length, first_citizen, first_zombie, first_madongsuk);
 
+	turn = 1;
+	
+	after_citizen = first_citizen;
+	after_zombie = first_zombie;
+
+	while (after_citizen + 1 != after_zombie && after_citizen != 1) {
+		 
+		r = get_random_number();
+		//시민 이동 계산
+		before_citizen = after_citizen;
+		after_citizen = calc_citizen_moving(r, p, after_citizen);
+		
+		//좀비 이동 계산
+		before_zombie = after_zombie;
+		after_zombie = calc_zombie_moving(turn, r, p, after_zombie);
+		
+		printf("\n");
+		//페이즈 진행 후 열차 상태
+		after_train_state(t_length, after_citizen, after_zombie, first_madongsuk);
+
+		printf("\n\n");
+
+		//페이즈 진행 후 시민 이동 출력
+		print_citizen_state(before_citizen, after_citizen);
+		//페이즈 진행 후 좀비 이동 출력
+		print_zombie_state(turn, before_zombie, after_zombie);
+		turn++;
+		Sleep(4000);//for test
+	}
+	//시민 승리
+	victory_citizen(after_citizen);
+	//좀비 승리
+	victory_zombie(after_citizen, after_zombie);
 	return 0;
 }
-
-// ----시민, 좀비 이동---
-// 시민 이동 정의하는 함수
-// 좀비 이동 정의하는 함수
-// ---변화된 열차 상태 출력---
-// 변화된 열차 상태 출력 함수
-// ---시민, 좀비 이동 정보 출력---
-// 시민의 이동 정보 출력하는 함수
-// 좀비의 이동 정보 출력하는 함수
-// ---최종 승리자 출력---
-// 시민 승리 출력 함수
-// 좀비 승리 출력 함수
-
-
-//int main() {
-// 
-//	srand((unsigned int)time(NULL));
-// 
-//	{
-//
-//			int after_citizen = citizen;
-//			int after_zombie = zombie;
-//
-//			int turn = 1;
-//
-//			while (after_citizen + 1 != after_zombie && after_citizen != 1) {
-//				int r = rand() % 100;
-//				//시민 이동	
-//				int before_citizen = after_citizen;
-//
-//				if (r >= p) {
-//					after_citizen = after_citizen - 1;
-//				}
-//				else {
-//					after_citizen = after_citizen;
-//				}
-//				//좀비 이동 
-//
-//				int before_zombie = after_zombie;
-//
-//				if (turn % 2 == 1 && r < p) {
-//					after_zombie = after_zombie - 1;
-//				}
-//				else if (turn % 2 == 1 && r >= p) {
-//					after_zombie = after_zombie;
-//				}
-//				else {
-//					after_zombie = after_zombie;
-//				}
-//
-//
-//				//열차 상태 출력
-//				printf("\n\n");
-//
-//				for (int i = 0; i < t_length; i++) {
-//					printf("#");
-//				}
-//
-//				printf("\n");
-//
-//				for (int i = 0; i < t_length; i++) {
-//
-//					if (i == 0 || i == t_length - 1) {
-//						printf("#");
-//					}
-//
-//					else if (i == after_citizen) {
-//						printf("C");
-//					}
-//					else if (i == after_zombie) {
-//						printf("Z");
-//					}
-//					else if (i == madongsuk) {
-//						printf("M");
-//					}
-//					else {
-//						printf(" ");
-//					}
-//
-//				}
-//
-//				printf("\n");
-//
-//				for (int i = 0; i < t_length; i++) {
-//					printf("#");
-//				}
-//
-//				printf("\n\n");
-//
-//				//시민, 좀비 상태 출력
-//				//시민 상태 출력
-//				if (before_citizen == after_citizen) {
-//					printf("citizen: stay %d\n", before_citizen);
-//				}
-//				else {
-//					printf("citizen: %d -> %d\n", before_citizen, after_citizen);
-//				}
-//				//좀비 상태 출력
-//				if (turn % 2 == 1 && before_zombie == after_zombie) {
-//					printf("zombie: stay %d\n", before_zombie);
-//				}
-//				else if (turn % 2 == 1 && before_zombie == after_zombie + 1) {
-//					printf("zombie: %d -> %d\n", before_zombie, after_zombie);
-//				}
-//				else {
-//					printf("zombie: stay %d (cannot move)\n", before_zombie);
-//				}
-//
-//				turn++;
-//				Sleep(4000);
-//			}
-//			// 아웃트로 4초이내 지나가기, 종료 상태 출력(성공, 실패)
-//			//시민 승리
-//			printf("\n");
-//
-//			if (after_citizen == 1) {
-//				printf("SUCCESS!\n");
-//				printf("citizen(s) escaped to the next train");
-//			}
-//			//좀비 승리
-//			else if (after_citizen + 1 == after_zombie) {
-//				printf("GAME OVER!\n");
-//				printf("Citizen(s) has(have) ben attacked by a zombie");
-//			}
-//		}
-//		//범위 밖의 값 입력시 프로그램 종료
-//		else {
-//			printf("<Notice>\n");
-//			printf("Because of the wrong input values, the program is ended.\n");
-//			printf("Please enter correct train length and percentile probability to start the program");
-//		}
-//
-//	}
-//	return 0;
-//}
