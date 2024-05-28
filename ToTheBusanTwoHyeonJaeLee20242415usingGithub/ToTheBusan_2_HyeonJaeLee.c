@@ -26,7 +26,7 @@
 #define ACTION_PROVOKE 1
 #define ACTION_PULL 2
 
-//2-1 부산헹(1)코드를 20줄 이내 함수들로 정리 (배열은 전역변수)
+//2-1 부산헹(1)코드를 20줄 이내 함수들로 정리
 //함수 선언부
 void intro(void);
 int get_train_length(void);
@@ -39,12 +39,12 @@ void first_train_state(int, int, int, int);
 
 int calc_citizen_moving(int, int, int);
 int calc_after_citizen_aggro(int, int, int);
-int calc_zombie_moving(int, int, int, int);
+int calc_zombie_moving(int, int, int, int, int, int, int, int, int);
 
 void after_train_state(int, int, int, int);
 
 void print_citizen_state(int, int, int, int);
-void print_zombie_state(int, int, int);
+void print_zombie_state(int, int, int, int, int);
 
 int get_madongsuk_moving(void);
 int calc_madongsuk_moving(int);
@@ -56,7 +56,16 @@ void citizen_acting(int);
 int calc_madongsuk_stamina(int, int, int, int, int);
 void zombie_acting(int, int, int, int, int, int, int);
 
-//변수 선언부
+int get_madongsuk_acting(int, int);
+int madongsuk_acting_aggro_effect(int, int);
+int madongsuk_acting_stamina_effect(int, int);
+
+void print_madongsuk_acting(int, int, int, int, int);
+void print_madongsuk_aggro_stamina(int, int, int, int, int, int);
+
+int calc_zombie_control_counter(int, int, int, int);
+
+//변수 선언부  (배열은 전역변수)
 int t_length, first_madongsuk_stamina;
 int p;
 int r;
@@ -75,6 +84,12 @@ int madongsuk_moving;
 
 int before_madongsuk_stamina;
 int after_madongsuk_stamina;
+
+int madongsuk_acting;
+int madongsuk_actions[3] = { 0, 1, 2 };
+
+int before_zombie_control_counter;
+int after_zombie_control_counter;
 
 // 인트로 함수
 void intro(void) {
@@ -180,43 +195,55 @@ int get_random_number(void) {
 int calc_citizen_moving(int r, int p, int after_citizen) {
 	if (r >= p) {
 		after_citizen = after_citizen - 1;
-		return after_citizen;
 	}
 	else if (r < p) {
 		after_citizen = after_citizen;
-		return after_citizen;
 	}
+	return after_citizen;
 }
 // 시민 어그로 계산 함수
 int calc_after_citizen_aggro(int r, int p, int after_citizen_aggro) {
 	if (r >= p) {
 		after_citizen_aggro++;
 		if (after_citizen_aggro > AGGRO_MAX) {
-			after_citizen_aggro--;
+			after_citizen_aggro = AGGRO_MAX;
 		}
 	}
 	else if (r < p) {
 		after_citizen_aggro--;
 		if (after_citizen_aggro < AGGRO_MIN) {
-			after_citizen_aggro++;
+			after_citizen_aggro = AGGRO_MIN;
 		}
 	}
 	return after_citizen_aggro;
 }
-// 좀비 이동 계산 함수 
-int calc_zombie_moving(int turn, int after_citizen_aggro, int after_madongsuk_aggro, int after_zombie) {
-	if (turn % 2 == 1 && after_citizen_aggro >= after_madongsuk_aggro) {
-		after_zombie = after_zombie - 1;
-		return after_zombie;
-	}
-	else if (turn % 2 == 1 && after_citizen_aggro < after_madongsuk_aggro) {
-		after_zombie = after_zombie + 1;
-		return after_zombie;
+// 좀비 이동 계산 함수
+int calc_zombie_moving(int turn, int after_citizen_aggro, int after_madongsuk_aggro,
+					  int before_zombie, int after_zombie, int after_citizen, int after_madongsuk,
+					  int before_zombie_control_counter, int after_zombie_control_counter) {
+	if (before_zombie_control_counter == after_zombie_control_counter) {
+		if (turn % 2 == 1 && after_citizen_aggro >= after_madongsuk_aggro) {
+			after_zombie = after_zombie - 1;
+			if (after_zombie == after_citizen) {
+				after_zombie++;
+			}
+		}
+
+		else if (turn % 2 == 1 && after_citizen_aggro < after_madongsuk_aggro) {
+			after_zombie = after_zombie + 1;
+			if (after_zombie == after_madongsuk) {
+				after_zombie--;
+			}
+		}
+
+		else {
+			after_zombie = before_zombie;
+		}
 	}
 	else {
-		after_zombie = after_zombie;
-		return after_zombie;
+		after_zombie = before_zombie;
 	}
+	return after_zombie;
 }
 // 이동 반영한 열차 상태 출력 함수
 void after_train_state(int t_length, int after_citizen, int after_zombie, int after_madongsuk) {
@@ -259,16 +286,23 @@ void print_citizen_state(int before_citizen, int after_citizen, int before_citiz
 	}
 }
 //좀비 상태 출력
-void print_zombie_state(int turn, int before_zombie, int after_zombie) {
-	if (turn % 2 == 1 && before_zombie == after_zombie) {
-		printf("zombie: stay %d\n", before_zombie);
-	}
-	else if (turn % 2 == 1 && before_zombie == after_zombie + 1) {
-		printf("zombie: %d -> %d\n", before_zombie, after_zombie);
+void print_zombie_state(int turn, int before_zombie, int after_zombie, 
+						int before_zombie_control_counter, int after_zombie_control_counter) {
+	if (before_zombie_control_counter == after_zombie_control_counter) {
+		if (turn % 2 == 1 && before_zombie == after_zombie) {
+			printf("zombie: stay %d\n", before_zombie);
+		}
+		else if (turn % 2 == 1 && before_zombie == after_zombie + 1) {
+			printf("zombie: %d -> %d\n", before_zombie, after_zombie);
+		}
+		else {
+			printf("zombie: stay %d (cannot move)\n", before_zombie);
+		}
 	}
 	else {
-		printf("zombie: stay %d (cannot move)\n", before_zombie);
+		printf("zombie: stay %d (madongsuk pulled zombie)\n", before_zombie);
 	}
+	
 }
 //마동석 이동 입력
 int get_madongsuk_moving(void) {
@@ -297,14 +331,14 @@ int calc_madongsuk_aggro(int madongsuk_movinging, int madongsuk_aggro) {
 	if (madongsuk_moving == MOVE_STAY) {
 		madongsuk_aggro--;
 		if (madongsuk_aggro < AGGRO_MIN) {
-			madongsuk_aggro++;
+			madongsuk_aggro = AGGRO_MIN;
 		}
 		return madongsuk_aggro;
 	}
 	else {
 		madongsuk_aggro++;
 		if (madongsuk_aggro > AGGRO_MAX) {
-			madongsuk_aggro--;
+			madongsuk_aggro = AGGRO_MAX;
 		}
 		return madongsuk_aggro;
 	}
@@ -339,7 +373,7 @@ int calc_madongsuk_stamina(int after_citizen, int after_zombie, int after_citize
 			}
 		}
 		else {
-			after_madongsuk_stamina == after_madongsuk_stamina;
+			after_madongsuk_stamina = after_madongsuk_stamina;
 		}
 	}
 	else if (after_citizen + 1 != after_zombie && after_zombie + 1 == after_madongsuk) {
@@ -380,6 +414,106 @@ void zombie_acting(int after_citizen, int after_zombie, int after_madongsuk, int
 		printf("zombie attacked nobody\n");
 	}
 }
+// 마동석 행동 입력
+int get_madongsuk_acting(int after_madongsuk, int after_zombie) {
+	while (1) {
+		if (after_madongsuk != after_zombie + 1) {
+			printf("madongsuk action(0.rest, 1.provoke)>> ");
+			scanf_s("%d", &madongsuk_acting);
+		}
+		else if (after_madongsuk == after_zombie + 1) {
+			printf("madongsuk action(0.rest, 1.provoke, 2.pull)>> ");
+			scanf_s("%d", &madongsuk_acting);
+		}
+
+		if(madongsuk_acting == ACTION_REST || madongsuk_acting == ACTION_PROVOKE || madongsuk_acting == ACTION_PULL) {
+			return madongsuk_acting;
+			break;
+		}
+	}
+}
+//마동석 행동으로 인한 어그로 변화 계산
+int madongsuk_acting_aggro_effect(int madongusk_acting, int after_madongsuk_aggro ) {
+	if (madongsuk_actions[madongsuk_acting] == ACTION_REST ) {
+		after_madongsuk_aggro--;
+		if (after_madongsuk_aggro < AGGRO_MIN) {
+			after_madongsuk_aggro++;
+		}
+	}
+	else if (madongsuk_actions[madongsuk_acting] == ACTION_PROVOKE) {
+		after_madongsuk_aggro = AGGRO_MAX;
+	}
+	else if (madongsuk_actions[madongsuk_acting] == ACTION_PULL) {
+		after_madongsuk_aggro += 2;
+		if (after_madongsuk_aggro > AGGRO_MAX) {
+			after_madongsuk_aggro = AGGRO_MAX;
+		}
+	}
+	return after_madongsuk_aggro;
+}
+//마동석 행동으로 인한 체력 변화 계산
+int madongsuk_acting_stamina_effect(int madongsuk_acting, int after_madongsuk_stamina) {
+	if (madongsuk_actions[madongsuk_acting] == ACTION_REST) {
+		after_madongsuk_stamina++;
+		if (after_madongsuk_stamina > STM_MAX) {
+			after_madongsuk_stamina--;
+		}
+	}
+	//1에서 감소하는 경우
+	else if (madongsuk_actions[madongsuk_acting] == ACTION_PROVOKE) {
+		after_madongsuk_stamina--;
+		if (after_madongsuk_stamina == STM_MIN) {
+			after_madongsuk_stamina++;
+		}
+	}
+	return after_madongsuk_stamina; // 매개변수 
+}
+
+//마동석 행동 출력
+void print_madongsuk_acting(int after_madongsuk_stamina, int madongsuk_acting, int after_madongsuk, int r, int p)
+{
+	if (after_madongsuk_stamina != STM_MIN) {
+		if (madongsuk_acting == 0) {
+			printf("madongsuk rests...\n");
+		}
+		// 어그로만 변화
+		else if (madongsuk_acting == 1) {
+			printf("madongsuk provoked zombie...\n");
+		}
+
+		else if (madongsuk_acting == 2) {
+			if (r >= p) {
+				printf("madongsuk pulled zombie... Next turn, it can't move\n");
+			}
+			else {
+				printf("madongsuk failed to pull zombie\n");
+			}
+		}
+	}
+}
+
+void print_madongsuk_aggro_stamina(int madongsuk_acting, int after_madongsuk, 
+								   int before_madongsuk_aggro, int after_madongsuk_aggro, 
+								   int before_madongsuk_stamina, int after_madongsuk_stamina) {
+	if (after_madongsuk_stamina != STM_MIN) {
+
+		if (madongsuk_acting == 0 || madongsuk_acting == 2)
+			printf("madongsuk: %d (aggro: %d -> %d, stamina: %d -> %d)\n", after_madongsuk,
+				before_madongsuk_aggro, after_madongsuk_aggro, before_madongsuk_stamina, after_madongsuk_stamina);
+		else {
+			printf("madongsuk: %d (aggro: %d -> %d, stamina: %d)\n", after_madongsuk,
+				before_madongsuk_aggro, after_madongsuk_aggro, after_madongsuk_stamina);
+		}
+
+	}
+}
+
+calc_zombie_control_counter(int madongsuk_acting, int after_zombie_control_counter, int r, int p) {
+	if (madongsuk_acting == ACTION_PULL && r >= p) {
+		after_zombie_control_counter++;
+	}
+	return after_zombie_control_counter;
+}
 
 // main 함수
 int main() {
@@ -415,6 +549,8 @@ int main() {
 	
 	after_madongsuk_stamina = first_madongsuk_stamina;
 
+	before_zombie_control_counter;
+	after_zombie_control_counter = 0;
 	while (after_citizen + 1 != after_zombie && after_citizen != 1 && after_madongsuk_stamina != STM_MIN) {
 		//2-3 이동 페이즈
 		r = get_random_number();
@@ -428,7 +564,8 @@ int main() {
 
 		//2-3 좀비 이동 계산
 		before_zombie = after_zombie;
-		after_zombie = calc_zombie_moving(turn, r, p, after_zombie);
+		after_zombie = calc_zombie_moving(turn, r, p, before_zombie, after_zombie, after_citizen, after_madongsuk,
+			                             before_zombie_control_counter, after_zombie_control_counter);
 		
 		printf("\n");
 
@@ -442,7 +579,7 @@ int main() {
 		
 
 		//2-3 좀비 이동 출력
-		print_zombie_state(turn, before_zombie, after_zombie);
+		print_zombie_state(turn, before_zombie, after_zombie, before_zombie_control_counter, after_zombie_control_counter);
 		
 		printf("\n\n");
 
@@ -468,16 +605,47 @@ int main() {
 		printf("\n\n");
 
 		//2-4 행동 페이즈
+		
 		// 2-4 시민 행동 출력
 		citizen_acting(after_citizen);
+
 		// 2-4 마동석 체력 계산
 		before_madongsuk_stamina = after_madongsuk_stamina;
 		after_madongsuk_stamina = calc_madongsuk_stamina(after_citizen, after_zombie, after_citizen_aggro, after_madongsuk_aggro, after_madongsuk_stamina);
+		
 		// 2-4 좀비 행동 출력
-		zombie_acting(after_citizen, after_zombie, after_madongsuk, after_citizen_aggro, after_madongsuk_aggro, before_madongsuk_stamina,
-			after_madongsuk_stamina);
+		zombie_acting(after_citizen, after_zombie, after_madongsuk, after_citizen_aggro, after_madongsuk_aggro, 
+					  before_madongsuk_stamina, after_madongsuk_stamina);
 
+		//2-4 마동석 행동 입력
+		madongsuk_acting = get_madongsuk_acting(after_madongsuk, after_zombie);
+		
+		printf("\n\n");
+		
+		// 2-4 마동석 행동으로 인한 어그로 체력 변화 계산
+		before_madongsuk_aggro = after_madongsuk_aggro;
+		after_madongsuk_aggro = madongsuk_acting_aggro_effect(madongsuk_acting, after_madongsuk_aggro);
+
+		before_madongsuk_stamina = after_madongsuk_stamina;
+		after_madongsuk_stamina = madongsuk_acting_stamina_effect(madongsuk_acting, after_madongsuk_stamina);
+
+		//2-4 마동석 행동 출력
+		print_madongsuk_acting(after_madongsuk_stamina, madongsuk_acting, after_madongsuk, r, p);
+		print_madongsuk_aggro_stamina(madongsuk_acting, after_madongsuk, before_madongsuk_aggro, after_madongsuk_aggro,
+									  before_madongsuk_stamina, after_madongsuk_stamina);
+
+		//2-4 좀비 다음 턴 이동 가능 여부 계산
+		before_zombie_control_counter = after_zombie_control_counter;
+		after_zombie_control_counter = calc_zombie_control_counter(madongsuk_acting, after_zombie_control_counter, r, p);
+
+		// 다음 턴으로
 		turn++;
 	}
 	return 0;
 }
+
+
+
+// 좀비 공격 대상 매크로 활용
+
+
