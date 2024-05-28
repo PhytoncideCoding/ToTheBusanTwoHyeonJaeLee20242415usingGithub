@@ -54,7 +54,8 @@ void print_madongsuk_state(int, int, int, int, int);
 
 void citizen_acting(int);
 int calc_madongsuk_stamina(int, int, int, int, int);
-void zombie_acting(int, int, int, int, int, int, int);
+int get_zombie_acting(int, int, int, int, int, int);
+void print_zombie_acting(int, int, int , int, int, int, int, int);
 
 int get_madongsuk_acting(int, int);
 int madongsuk_acting_aggro_effect(int, int);
@@ -85,6 +86,8 @@ int madongsuk_moving;
 int before_madongsuk_stamina;
 int after_madongsuk_stamina;
 
+int zombie_acting;
+int zombie_actions[3] = { 0, 1, 2 };
 int madongsuk_acting;
 int madongsuk_actions[3] = { 0, 1, 2 };
 
@@ -385,35 +388,67 @@ int calc_madongsuk_stamina(int after_citizen, int after_zombie, int after_citize
 	return after_madongsuk_stamina;
 }
 
-//좀비 행동 출력
-void zombie_acting(int after_citizen, int after_zombie, int after_madongsuk, int after_citizen_aggro, int after_madongsuk_aggro, 
-	int before_madongsuk_stamina, int after_madongsuk_stamina) {
+//좀비 행동 결과 계산
+int get_zombie_acting(int after_citizen, int after_zombie, int after_madongsuk, 
+					 int after_citizen_aggro,
+					 int after_madongsuk_aggro, int after_madongsuk_stamina) {
+
 	if (after_citizen + 1 == after_zombie && after_zombie + 1 != after_madongsuk) {
-		printf("GAME OVER! citzen dead...\n");
+		return ATK_CITIZEN;
 	}
-	else if (after_citizen + 1 != after_zombie && after_zombie + 1 == after_madongsuk) {
-		printf("Zombie attacked madongsuk(madongseok stamina: %d -> %d)\n", before_madongsuk_stamina, after_madongsuk_stamina);
 
-		if (after_madongsuk_stamina == STM_MIN) {
-				printf("GAME OVER! madongsuk dead");
-		}
-
+	else if (after_citizen + 1 != after_zombie && after_zombie + 1 == after_madongsuk 
+			&& after_madongsuk_stamina == STM_MIN) {
+			return ATK_DONGSEOK;
 	}
+
 	else if (after_citizen + 1 == after_zombie && after_zombie + 1 == after_madongsuk) {
-		if (after_citizen_aggro <= after_madongsuk_aggro) {
-			printf("Zombie attacked madongseok (aggro: %d vs %d, madongsuk stamina: %d -> %d)\n", after_citizen_aggro, after_madongsuk_aggro, before_madongsuk_stamina, after_madongsuk_stamina);
-			if (after_madongsuk_stamina == STM_MIN) {
-				printf("GAME OVER! madongsuk dead");
-			}
+		if (after_citizen_aggro <= after_madongsuk_aggro && after_madongsuk_stamina == STM_MIN) {
+				return ATK_DONGSEOK;
 		}
 		else {
-			printf("GAME OVER! citizen dead...\n");
+			return ATK_CITIZEN;
 		}
 	}
+
 	else {
-		printf("zombie attacked nobody\n");
+		return ATK_NONE;
 	}
 }
+
+// 좀비 행동 결과 출력
+void print_zombie_acting(int after_citizen, int after_zombie, int after_madongsuk, 
+						int before_madongsuk_stamina, int after_madongsuk_stamina,
+						int after_citizen_aggro, int after_madongsuk_aggro,	int zombie_acting) {
+	
+	if (zombie_actions[zombie_acting] == ATK_NONE) {
+		printf("zombie attacked nobody\n");
+	}
+
+	else if (zombie_actions[zombie_acting] == ATK_CITIZEN) {
+		printf("GAME OVER! citizen dead...\n");
+	}
+
+	else if (after_citizen + 1 != after_zombie && after_zombie + 1 == after_madongsuk) {
+		printf("Zombie attacked madongsuk(madongseok stamina: %d -> %d)\n", before_madongsuk_stamina, after_madongsuk_stamina);
+		if (zombie_actions[zombie_acting] == ATK_DONGSEOK) {
+			printf("GAME OVER! madongsuk dead\n");
+		}
+	}
+
+	else if (after_citizen + 1 == after_zombie && after_zombie + 1 == after_madongsuk) {
+		if (after_citizen_aggro <= after_madongsuk_aggro) {
+			printf("Zombie attacked madongseok (aggro: %d vs %d, madongsuk stamina: %d -> %d)\n", 
+				after_citizen_aggro, after_madongsuk_aggro,
+				before_madongsuk_stamina, after_madongsuk_stamina);
+
+			if (zombie_actions[zombie_acting] == ATK_DONGSEOK) {
+				printf("GAME OVER! madongsuk dead\n");
+			}
+		}
+	}
+}
+
 // 마동석 행동 입력
 int get_madongsuk_acting(int after_madongsuk, int after_zombie) {
 	while (1) {
@@ -613,9 +648,13 @@ int main() {
 		before_madongsuk_stamina = after_madongsuk_stamina;
 		after_madongsuk_stamina = calc_madongsuk_stamina(after_citizen, after_zombie, after_citizen_aggro, after_madongsuk_aggro, after_madongsuk_stamina);
 		
+		// 2-4 좀비 행동 반환
+		zombie_acting = get_zombie_acting(after_citizen, after_zombie, after_madongsuk,
+										 after_citizen_aggro, after_madongsuk_aggro, after_madongsuk_stamina);
 		// 2-4 좀비 행동 출력
-		zombie_acting(after_citizen, after_zombie, after_madongsuk, after_citizen_aggro, after_madongsuk_aggro, 
-					  before_madongsuk_stamina, after_madongsuk_stamina);
+		print_zombie_acting(after_citizen, after_zombie, after_madongsuk,
+							before_madongsuk_stamina, after_madongsuk_stamina,
+							after_citizen_aggro, after_madongsuk_aggro, zombie_acting);
 
 		//2-4 마동석 행동 입력
 		madongsuk_acting = get_madongsuk_acting(after_madongsuk, after_zombie);
