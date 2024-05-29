@@ -565,6 +565,7 @@ void print_madongsuk_aggro_stamina(int madongsuk_acting, int after_madongsuk,
 		printf("madongsuk: %d (aggro: %d -> %d, stamina: %d -> %d)\n", after_madongsuk,
 			    before_madongsuk_aggro, after_madongsuk_aggro, before_madongsuk_stamina, after_madongsuk_stamina);
 	}
+	
 	else {
 		printf("madongsuk: %d (aggro: %d -> %d, stamina: %d)\n", after_madongsuk,
 			    before_madongsuk_aggro, after_madongsuk_aggro, after_madongsuk_stamina);
