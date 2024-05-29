@@ -1,4 +1,4 @@
-//2-2 Sleep()삭제
+//2-2 Sleep()삭제 scanf_s()에서만 정지
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
